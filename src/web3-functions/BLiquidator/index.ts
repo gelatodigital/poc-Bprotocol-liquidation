@@ -4,8 +4,6 @@ import {
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
 
-import axios from "axios";
-
 import { Contract, providers, utils } from "ethers";
 
 // import { uploadJsonFile } from "./s3-cient";
@@ -18,8 +16,25 @@ interface ISTORED_DATA {
 }
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, multiChainProvider, secrets, storage } = context;
+  const { multiChainProvider, storage } = context;
   const provider = multiChainProvider.default();
+
+  let storedData: ISTORED_DATA = {
+    accounts: [],
+    lastCoveredBlock: 20683828 + 1, //20683828 contract creation on Fantom
+  };
+
+  const storageStoredData = await storage.get("storedData");
+
+  if (storageStoredData == undefined) {
+    storedData = storedS3;
+  }
+
+  storedData = await updateUsers(provider, storedData as ISTORED_DATA);
+
+  await storage.set("storedData", JSON.stringify(storedData));
+
+  console.log("stored new accounts");
 
   const lastPostTime = parseInt((await storage.get("lastPostTime")) ?? "0");
 
@@ -33,21 +48,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   }
   await storage.set("lastPostTime", blockTime.toString());
 
-  let storedData: ISTORED_DATA = {
-    accounts: [],
-    lastCoveredBlock: 20683828 + 1, //20683828 contract creation on Fantom
-  };
-
-  let storageStoredData = await storage.get("storedData");
-
-  if (storageStoredData == undefined) {
-    storedData = storedS3;
-  }
-
-  storedData = await updateUsers(provider, storedData as ISTORED_DATA);
-
-  await storage.set("storedData", JSON.stringify(storedData));
-
   const callDatas: Array<{ to: string; data: string }> = [];
 
   const helperContract = new Contract(
@@ -58,8 +58,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   console.log(storedData.accounts.length);
 
-  for (let i = 0; i < storedData.accounts.length; i += 50) {
-    const slice = storedData.accounts.slice(i, i + 50);
+  for (let i = 0; i < storedData.accounts.length; i += 100) {
+    const slice = storedData.accounts.slice(i, i + 100);
 
     const comptroller = "0x0F390559F258eB8591C8e31Cf0905E97cf36ACE2";
     const bamms1 = ["0x1346e106b4E2558DAACd2E8207505ce7E31e05CA"];
@@ -106,7 +106,7 @@ export async function updateUsers(
   const currBlock = (await provider.getBlock("latest")).number - 10;
   if (currBlock > storedData.lastCoveredBlock) {
     storedData = await readAllUsers(
-      storedData.lastCoveredBlock - 50,
+      storedData.lastCoveredBlock,
       currBlock,
       storedData,
       provider
@@ -134,7 +134,7 @@ async function readAllUsers(
   console.log({ lastBlock });
 
   for (let i = startBlock; i < lastBlock; i += step) {
-    let start = i;
+    const start = i;
     let end = i + step - 1;
     if (end > lastBlock) end = lastBlock;
     const eventFilter = {
@@ -147,7 +147,7 @@ async function readAllUsers(
 
     for (const transferLog of transferLogs) {
       const transferEvent = unitrollerIface.parseLog(transferLog);
-      const [ctoken, account] = transferEvent.args;
+      const [, account] = transferEvent.args;
       if (!storedData.accounts.includes(account))
         storedData.accounts.push(account);
     }
