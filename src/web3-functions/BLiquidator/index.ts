@@ -127,7 +127,7 @@ async function readAllUsers(
   storedData: ISTORED_DATA,
   provider: providers.StaticJsonRpcProvider
 ): Promise<ISTORED_DATA> {
-  const step = 100000;
+  const step = 1000;
   const unitroller = "0x0F390559F258eB8591C8e31Cf0905E97cf36ACE2";
   const unitrollerIface = new utils.Interface(unitrollerABI);
   const topics = [unitrollerIface.getEventTopic("MarketEntered")];
