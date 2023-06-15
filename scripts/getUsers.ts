@@ -2,7 +2,7 @@ import { providers, utils } from "ethers";
 import { readFileSync, writeFileSync } from "fs";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import * as hre from "hardhat";
-import { unitrollerABI } from "../src/web3-functions/BLiquidator/abis/abis";
+import { unitrollerABI } from "../web3-functions/BLiquidator/abis/abis";
 import { join } from "path";
 interface IstoredData {
   accounts: string[];

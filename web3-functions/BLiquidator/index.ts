@@ -28,9 +28,11 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   if (storageStoredData == undefined) {
     storedData = storedS3;
+  } else {
+    storedData = JSON.parse(storageStoredData) as ISTORED_DATA;
   }
 
-  storedData = await updateUsers(provider, storedData as ISTORED_DATA);
+  storedData = await updateUsers(provider, storedData);
 
   await storage.set("storedData", JSON.stringify(storedData));
 
@@ -56,10 +58,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     provider
   ) as Contract;
 
-  console.log(storedData.accounts.length);
-
-  for (let i = 0; i < storedData.accounts.length; i += 100) {
-    const slice = storedData.accounts.slice(i, i + 100);
+  for (let i = 0; i < storedData.accounts.length; i += 200) {
+    const slice = storedData.accounts.slice(i, i + 200);
 
     const comptroller = "0x0F390559F258eB8591C8e31Cf0905E97cf36ACE2";
     const bamms1 = ["0x1346e106b4E2558DAACd2E8207505ce7E31e05CA"];
@@ -131,7 +131,6 @@ async function readAllUsers(
   const unitroller = "0x0F390559F258eB8591C8e31Cf0905E97cf36ACE2";
   const unitrollerIface = new utils.Interface(unitrollerABI);
   const topics = [unitrollerIface.getEventTopic("MarketEntered")];
-  console.log({ lastBlock });
 
   for (let i = startBlock; i < lastBlock; i += step) {
     const start = i;
@@ -143,6 +142,7 @@ async function readAllUsers(
       fromBlock: start,
       toBlock: end,
     };
+    console.log("blocks: " + eventFilter.fromBlock, eventFilter.toBlock);
     const transferLogs = await provider.getLogs(eventFilter);
 
     for (const transferLog of transferLogs) {

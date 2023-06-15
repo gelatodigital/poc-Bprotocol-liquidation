@@ -2,4 +2,4 @@
 
 ## Summary
 
-This projects showcases how to run liquidations with web3 Functions
+This projects showcases how to run liquidations with Web3 Functions

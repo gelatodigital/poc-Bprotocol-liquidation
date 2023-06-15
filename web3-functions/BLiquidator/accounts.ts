@@ -3298,5 +3298,5 @@ export const storedS3 = {
     "0x8dc555828D81f573efa62AaBb331083CBA24C8D6",
     "0x38fA7Bf4911e3dDeeFF3ee03DEe81c4d91556d1E",
   ],
-  lastCoveredBlock: 63782895,
+  lastCoveredBlock: 63805277,
 };
